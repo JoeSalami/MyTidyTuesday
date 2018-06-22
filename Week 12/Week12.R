@@ -1,0 +1,87 @@
+## Loading Packages...
+
+library(tidyverse)
+library(lubridate)
+library(RColorBrewer)
+
+## Reading Data
+hurricanes <- read_csv("~/GitHub/MyTidyTuesday/Week 12/Data/week12_mediacloud_hurricanes.csv")
+hurricanes_states <- read_csv("~/GitHub/MyTidyTuesday/Week 12/Data/week12_mediacloud_states.csv")
+hurricanes_tvs <-  read_csv("~/GitHub/MyTidyTuesday/Week 12/Data/week12_tv_hurricanes.csv")
+hurricanes_trump<-  read_csv("~/GitHub/MyTidyTuesday/Week 12/Data/week12_mediacloud_trump.csv")
+google_trends <-  read_csv("~/GitHub/MyTidyTuesday/Week 12/Data/week12_google_trends.csv", skip = 2)
+
+# Plot 1
+hurricanes$Date <- mdy(hurricanes$Date)
+
+hurricanes <- hurricanes %>% 
+                      gather(key = "Hurricane", value = "Mentions", -Date)
+
+ggplot(hurricanes, aes(x = Date, y = Mentions, fill = Hurricane)) +
+  geom_area(color = "grey55", alpha = 0.7 ,position = "dodge") +
+  labs(title = "Comparing Online Coverage of Hurricane Maria",
+       subtitle = 'Number of sentences mentioning each hurricane among "U.S. Top Online News"',
+       caption = "BY: JoeSalami   SOURCE: Media Cloud, FiveThirtyEight",
+       x="", y="Sentences per day") +
+       scale_fill_manual(values = brewer.pal(n = 4, name = "Dark2") ) +
+       theme_light()
+
+# Plot 2
+hurricanes_states$Date <- mdy(hurricanes_states$Date)
+
+hurricanes_states <- hurricanes_states %>%
+  gather(key = "Hurricane", value = "Mentions", -Date)
+
+ggplot(hurricanes_states, aes(x = Date, y = Mentions, fill = Hurricane)) +
+  geom_area(color = "grey55", alpha = 0.8 ,position = "dodge") +
+  labs(title = "Comparing Sate Coverage of Hurricane Maria",
+       caption = "BY: JoeSalami   SOURCE: Media Cloud, FiveThirtyEight",
+       x="", y="Sentences per day")+
+  scale_fill_manual(values = brewer.pal(n = 3, name = "Dark2") ) +
+  theme_light()
+
+# Plot 3
+hurricanes_tvs$Date <- mdy(hurricanes_tvs$Date)
+
+hurricanes_tvs <- hurricanes_tvs %>%
+  gather(key = "Hurricane", value = "Mentions", -Date)
+
+ggplot(hurricanes_tvs, aes(x = Date, y = Mentions, fill = Hurricane)) +
+  geom_area(color = "grey55", alpha = 0.8 ,position = "dodge") +
+  labs(title = "Comparing Cable TV Coverage of Hurricane Maria",
+       subtitle = 'Share of sentences on TV news mentioning each hurricane',
+       caption = "BY: JoeSalami   SOURCE: Media Cloud, FiveThirtyEight",
+       x="", y="Share of Sentences every day")+
+  scale_fill_manual(values = brewer.pal(n = 4, name = "Spectral") ) +
+  theme_light()
+
+# Plot 4
+colnames(hurricanes_trump) <- c("Date", "Puerto.Rico", "Puerto.Rico.Trump", 
+                                "Florida", "Florida.Trump", "Texas", "Texas.Trump")
+hurricanes_trump$Date <- ymd(hurricanes_trump$Date)
+hurricanes_trump_sub <- hurricanes_trump %>% 
+  gather(key = "State", value = "Mentions", -Date)
+
+ggplot(hurricanes_trump_sub, aes(x = Date, y = Mentions, fill = State)) +
+  geom_area(color = "grey55", alpha = 0.6 ,position = "dodge") +
+  labs(title = "Comparing State TV Coverage of Hurricane Maria",
+       subtitle = 'Share of sentences on TV news mentioning each hurricane',
+       caption = "BY: JoeSalami   SOURCE: Media Cloud, FiveThirtyEight",
+       x="", y="Share of Sentences every day")+
+  scale_fill_manual(values = brewer.pal(n = 6, name = "Dark2") ) +
+  theme_light()
+
+# Plot 5
+colnames(google_trends) <- c("Day", "Harvey", "Irma", "Maria", "Jose")
+google_trends$Day <- ymd(google_trends$Day)
+
+google_trends <- google_trends %>%
+  gather(key = "Hurricane", value = "Mentions", -Day)
+
+ggplot(google_trends, aes(x = Day, y = Mentions, fill = Hurricane)) +
+  geom_area(color = "grey55", alpha = 0.8 ,position = "dodge") +
+  labs(title = "Google search trends in US",
+       caption = "BY: JoeSalami   SOURCE: Google Trends, FiveThirtyEight",
+       x="", y="")+
+    scale_fill_manual(values = brewer.pal(n = 4, name = "Spectral") ) +
+  theme_light()
