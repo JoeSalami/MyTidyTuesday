@@ -1,19 +1,26 @@
+---
+title: "Tidy Tuesday, Week 12"
+subtitle: "Hurricanes Coverage in US "
+---
 ## Loading Packages...
-
+```{r}
 library(tidyverse)
 library(lubridate)
 library(RColorBrewer)
+```
 
 ## Reading Data
+```{r}
 hurricanes <- read_csv("~/GitHub/MyTidyTuesday/Week 12/Data/week12_mediacloud_hurricanes.csv")
 hurricanes_states <- read_csv("~/GitHub/MyTidyTuesday/Week 12/Data/week12_mediacloud_states.csv")
 hurricanes_tvs <-  read_csv("~/GitHub/MyTidyTuesday/Week 12/Data/week12_tv_hurricanes.csv")
 hurricanes_trump<-  read_csv("~/GitHub/MyTidyTuesday/Week 12/Data/week12_mediacloud_trump.csv")
 google_trends <-  read_csv("~/GitHub/MyTidyTuesday/Week 12/Data/week12_google_trends.csv", skip = 2)
+```
 
 # Plot 1
+```{r}
 hurricanes$Date <- mdy(hurricanes$Date)
-
 hurricanes <- hurricanes %>% 
                       gather(key = "Hurricane", value = "Mentions", -Date)
 
@@ -25,8 +32,11 @@ ggplot(hurricanes, aes(x = Date, y = Mentions, fill = Hurricane)) +
        x="", y="Sentences per day") +
        scale_fill_manual(values = brewer.pal(n = 4, name = "Dark2") ) +
        theme_light()
+```
+
 
 # Plot 2
+```{r}
 hurricanes_states$Date <- mdy(hurricanes_states$Date)
 
 hurricanes_states <- hurricanes_states %>%
@@ -39,8 +49,10 @@ ggplot(hurricanes_states, aes(x = Date, y = Mentions, fill = Hurricane)) +
        x="", y="Sentences per day")+
   scale_fill_manual(values = brewer.pal(n = 3, name = "Dark2") ) +
   theme_light()
+```
 
 # Plot 3
+```{r}
 hurricanes_tvs$Date <- mdy(hurricanes_tvs$Date)
 
 hurricanes_tvs <- hurricanes_tvs %>%
@@ -54,8 +66,10 @@ ggplot(hurricanes_tvs, aes(x = Date, y = Mentions, fill = Hurricane)) +
        x="", y="Share of Sentences every day")+
   scale_fill_manual(values = brewer.pal(n = 4, name = "Spectral") ) +
   theme_light()
+```
 
 # Plot 4
+```{r}
 colnames(hurricanes_trump) <- c("Date", "Puerto.Rico", "Puerto.Rico.Trump", 
                                 "Florida", "Florida.Trump", "Texas", "Texas.Trump")
 hurricanes_trump$Date <- ymd(hurricanes_trump$Date)
@@ -71,7 +85,10 @@ ggplot(hurricanes_trump_sub, aes(x = Date, y = Mentions, fill = State)) +
   scale_fill_manual(values = brewer.pal(n = 6, name = "Dark2") ) +
   theme_light()
 
+```
+
 # Plot 5
+```{r}
 colnames(google_trends) <- c("Day", "Harvey", "Irma", "Maria", "Jose")
 google_trends$Day <- ymd(google_trends$Day)
 
@@ -85,3 +102,4 @@ ggplot(google_trends, aes(x = Day, y = Mentions, fill = Hurricane)) +
        x="", y="")+
     scale_fill_manual(values = brewer.pal(n = 4, name = "Spectral") ) +
   theme_light()
+```
