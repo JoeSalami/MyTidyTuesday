@@ -1,0 +1,65 @@
+---
+title: "TidyTuesday Week 14"
+subtitle: "Life Expectancy in Ghana"
+output: html_notebook
+---
+
+# Loading libraries
+```{r}
+library(tidyverse)
+library(ggthemes)
+```
+
+# Reading in data
+```{r}
+life <- read_csv("https://github.com/rfordatascience/tidytuesday/raw/master/data/week14_global_life_expectancy.csv")
+```
+
+# Selecting Ghana and neighbouring countries 
+```{r}
+top.africa <- life %>% filter(country %in% c('Nigeria', 'Burkina Faso', 'Togo', 'Ghana', "Cote d'Ivoire"), year >= 1950)
+
+```
+
+
+# Plotting life expectancy by country
+```{r}
+plot1 <- ggplot(top.africa, aes(x = year, y = life_expectancy, group = country, colour = country, size=I(1))) + 
+   geom_line() + 
+   labs(title = "Life expectancy in Ghana and neighbours",
+        x = "Year",
+        y = "Life expectancy (years)", 
+        colour = "Country",
+        caption= "Data:ourworldindata.org \nBy: @JoeSalami") +
+   theme_solarized_2(light = FALSE) + scale_colour_solarized() +
+   scale_x_continuous(breaks = seq(min(top.africa$year), max(top.africa$year), by = 5)) +
+   scale_y_continuous(breaks = seq(round(min(top.africa$life_expectancy), 0), round(max(top.africa$life_expectancy), 0), by = 5)) + 
+   theme(axis.text.x = element_text(angle = 90))
+
+ggsave("Ghana_plot1.png",  path = '~/GitHub/MyTidyTuesday/Week 14')
+plot1
+```
+
+
+# Plotting percent change in life expectancy by country
+```{r}
+top.africa1 <- top.africa %>% 
+  group_by(country) %>%
+  mutate(pct_change = (life_expectancy/lag(life_expectancy) - 1) * 100) %>%
+  filter(year > 1951)
+
+plot2 <- ggplot(top.africa1, aes(x = year, y = pct_change, group = country, colour = country)) + 
+  geom_line() + 
+  labs(title = "Percent change in life expectancy in Ghana and neighbours over time", 
+       x = "Year", 
+       y = "% change in life expectancy", 
+       colour = "Country",
+       caption= "Data:ourworldindata.org \nBy: @JoeSalami") + 
+  theme_solarized_2(light = FALSE) + scale_colour_solarized() +
+  scale_x_continuous(breaks = seq(min(top.africa1$year), max(top.africa1$year), by = 5)) +
+  scale_y_continuous(breaks = seq(round(min(top.africa1$pct_change), 1), round(max(top.africa1$pct_change), 1), by = 0.2)) +
+  theme(axis.text.x = element_text(angle = 90))
+
+ggsave("Ghana_plot2.png", path = '~/GitHub/MyTidyTuesday/Week 14')
+plot2
+```
