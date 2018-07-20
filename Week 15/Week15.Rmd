@@ -1,0 +1,71 @@
+---
+title: "Craft Beer USA"
+output: html_notebook
+---
+
+## Loading Packages and Data...
+```{r include=FALSE}
+library(readxl)
+library(tidyverse)
+library(ggthemes)
+
+beer <- read_excel("week15_beers.xlsx", sheet = "beers")
+brewery <- read_excel("week15_beers.xlsx", sheet = "breweries")
+
+```
+
+## Top Beer Styles
+```{r}
+top_style <- beer %>%
+  select(style, abv) %>% filter(!is.na(abv)) %>%
+  group_by(style) %>%
+  summarise(count = n(),
+            abv = mean(abv) * 100) %>%
+  arrange(desc(count)) %>% top_n(10, count) 
+
+```
+
+## Top Style Plot
+```{r}
+ggplot(top_style, aes(x= reorder(style, count),y= count))+
+  geom_bar(stat="identity", aes(fill = abv ))+ coord_flip()+
+        labs(y = 'No. of Beers',
+         x = 'Styles',
+         title = 'Top 10 Beer Styles',
+         fill = 'Alcohol Level',
+                caption="\nSource: data.world  \nPlot by Joe Salami") +
+    scale_fill_gradient(low = 'green', high = 'red') +
+  theme_fivethirtyeight()
+
+ggsave('top_breer_style.png', path = '~/GitHub/MyTidyTuesday/Week 15')
+```
+
+
+## Top Brewery
+```{r}
+top_brew <- left_join(brewery, beer, by = c('id'= 'brewery_id')) %>%
+  select(name.x, abv) %>% filter(!is.na(abv)) %>%
+  group_by(name.x) %>%
+  summarise(count = n(),
+            abv = mean(abv) * 100) %>%
+  arrange(desc(count)) %>% top_n(10, count)
+
+```
+
+## Top Brewery Plot
+```{r fig.height=7, fig.width=10}
+top_brewery <- ggplot(top_brew, aes(x= reorder(name.x, count),y= count))+
+  geom_bar(stat="identity", aes(fill = abv ))+ coord_flip()+
+  labs(y = 'No. of Beers',
+       x = 'Brewery',
+       title = 'Top 10 Breweries',
+       fill = 'Alcohol Level',
+       caption="\nSource: data.world  \nPlot by Joe Salami") +
+  scale_fill_gradient(low = 'green', high = 'red') +
+  theme_fivethirtyeight()
+  
+ggsave('top_brewery.png', path = '~/GitHub/MyTidyTuesday/Week 15', width = 10, height = 7)
+top_brewery
+```
+
+

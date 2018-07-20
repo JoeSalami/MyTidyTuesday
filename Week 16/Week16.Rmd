@@ -1,0 +1,80 @@
+---
+title: "Exercise USA"
+output: html_notebook
+---
+
+## Loading Packages and Data...
+
+```{r include=FALSE}
+library(readxl)
+library(tidyverse)
+library(ggthemes)
+library(LaCroixColoR)
+library(maps)
+
+exercise <- read_xlsx('week16_exercise.xlsx', sheet = 'source')
+
+```
+
+## Top States  
+
+```{r}
+top_states <- exercise %>% select(state,adults, men, women) %>% 
+              filter(!state == 'All states (average)') %>% 
+              top_n(10, adults) %>%
+              gather(key = sex, value = score, c(men, women))
+
+```
+
+## Top States bar plot
+```{r echo=FALSE, fig.height=7, fig.width=10}
+top_states_plot <- ggplot(top_states, aes(x= reorder(state, adults),y=score))+
+                    geom_bar(stat="identity",  position="dodge", width= 0.6, aes(fill = sex))+ 
+                    scale_fill_manual(values = lacroix_palette(name = 'PeachPear', n = 2, type = 'discrete'))+ 
+                    coord_flip() +
+                    theme_fivethirtyeight()+
+                    labs(title="Adult exercise in the US, top ten States", 
+                         subtitle="Percentages of adults aged 18-64 who met both aerobic and muscle-strengthening \nfederal guidelines through leisure-time physical activity", 
+                         x = NULL, 
+                         y = NULL, fill = NULL, 
+                         caption="\nSource: CDC - National Health Statistics Reports\nPlot by Joe Salami") 
+                    
+ggsave('Top_states_bar.png',  path = '~/GitHub/MyTidyTuesday/Week 16',  width = 10, height = 7)
+top_states_plot
+```
+
+## State exercise 
+```{r}
+states <- map_data('state')
+
+state_abbr <- tibble(region = tolower(state.name), abb = state.abb) %>%
+  bind_rows(tibble(region = 'district of columbia', abb = 'DC'))
+
+exercise_state <- exercise %>% 
+  filter(state != 'All states (average)') %>%
+  mutate(region = tolower(state)) %>%
+  select(region, adults) %>%
+  inner_join(states, by = 'region') %>%
+  inner_join(state_abbr, by = 'region')
+
+states_label <- data.frame(state.center, state.abb) %>%
+  filter(!state.abb %in% c('AK', 'HI'))
+```
+
+## State exercise map
+```{r fig.height=7, fig.width=12}
+state_map <- ggplot(exercise_state) +
+  geom_polygon(aes(x = long, y = lat, fill = adults, group = group),
+               color = 'black', size = 0.2) + 
+  geom_text(data = states_label, aes(x = x, y = y, label = state.abb, group = NULL),
+            size = 2.8, fontface = 2, color = 'white') +
+  scale_fill_viridis_c(direction = -1, option = "E")+ 
+  theme_fivethirtyeight() +
+  labs(x = NULL, y = NULL, fill = '% adults',
+       title="Adult exercise in the US, top ten States", 
+       subtitle="Percentages of adults aged 18-64 who met both aerobic and muscle-strengthening \nfederal guidelines through leisure-time physical activity",
+       caption="\nSource: CDC - National Health Statistics Reports\nPlot by Joe Salami")
+ggsave('state_exercise_map.png',  path = '~/GitHub/MyTidyTuesday/Week 16',  width = 10, height = 7)
+state_map
+```
+
