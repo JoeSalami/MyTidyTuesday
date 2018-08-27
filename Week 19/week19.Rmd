@@ -1,0 +1,79 @@
+---
+title: "Airline Safety"
+output: html_notebook
+---
+
+## Loading Packages and Data
+```{r message=FALSE, warning=FALSE}
+library(dplyr)
+library(tidyverse)
+library(ggthemes)
+library(gridExtra)
+air <- read.csv('https://github.com/rfordatascience/tidytuesday/blob/master/data/2018-08-07/week19_airline_safety.csv')
+head(air)
+```
+
+## Distribution of Incidents
+```{r fig.height=10, fig.width=10, message=FALSE, warning=FALSE}
+plot1 <- ggplot(air, aes(x = year_range, y = n_events, fill = year_range))+
+  geom_boxplot() + facet_wrap(~type_of_event, scales = 'free')+
+  theme_fivethirtyeight()+
+  labs(title = 'Distribution of Airline Events', 
+       subtitle = 'Number of incidents, fatal accidents and fatalities',
+       caption = "\nSource: FiveFiftyEight\nPlot by Joe Salami")
+plot1
+ggsave('Distribution_of_Incidents.png', path = '~/GitHub/MyTidyTuesday/Week 19', width = 10, height = 10)
+```
+
+
+```{r}
+fatalities <- air %>% select(airline,type_of_event, n_events, year_range) %>%
+  group_by(airline, type_of_event, year_range) %>%
+  summarise(total = sum(n_events)) %>% filter(type_of_event == 'fatalities')%>%
+  spread(year_range,total) %>%
+  select(airline, type_of_event, past = '85_99', recent = '00_14') %>%
+  filter(!(past == 0 | recent ==0)) %>%
+  ungroup() %>%
+  mutate(change = recent  - past) %>%
+  arrange(desc(change)) %>%
+  head(5) %>% gather(key = time, value = n_events, c(past, recent))
+
+incidents<-air %>% select(airline,type_of_event, n_events, year_range) %>%
+  group_by(airline, type_of_event, year_range) %>%
+  summarise(total = sum(n_events)) %>% 
+  filter(type_of_event == 'incidents')%>%
+  spread(year_range,total) %>%
+  select(airline, type_of_event, past = '85_99', recent = '00_14') %>% 
+  filter(!(past == 0 | recent ==0)) %>%
+  ungroup() %>%
+  mutate(change = recent  - past) %>%
+  arrange(desc(change)) %>%
+  head(5) %>% gather(key = time, value = n_events, c(past, recent))
+
+
+```
+
+## Top ten airlines with increase in incidents fatal_accidents and fatalities, 
+```{r fig.height=7, fig.width=10, message=FALSE, warning=FALSE}
+plot2 <- ggplot(fatalities, aes(x= reorder(airline, change),y=n_events))+
+            geom_bar(stat="identity",  position="dodge", width= 0.6, aes(fill = time)) +                 coord_flip() + theme_fivethirtyeight() +
+  labs(title = 'Most increase in Fatalities',
+       subtitle = 'Comparing 1985-1990 to 2000-2014',
+       x = 'Airline',
+       y = 'Number of Fatalities',
+       caption = "\nSource: FiveFiftyEight\nPlot by Joe Salami")
+
+ggsave('Top_fatalities.png', path = '~/GitHub/MyTidyTuesday/Week 19', width = 10, height = 7)
+
+plot3 <- ggplot(incidents, aes(x= reorder(airline, change),y=n_events))+
+            geom_bar(stat="identity",  position="dodge", width= 0.6, aes(fill = time)) +                 coord_flip() + theme_fivethirtyeight() +
+  labs(title = 'Most increase in Incidents',
+       subtitle = 'Comparing 1985-1990 to 2000-2014',
+       x = 'Airline',
+       y = 'Number of Incidents',
+       caption = "\nSource: FiveFiftyEight\nPlot by Joe Salami")
+
+ggsave('Top_incidents.png', path = '~/GitHub/MyTidyTuesday/Week 19', width = 10, height = 7)
+
+grid.arrange(plot2, plot3, nrow = 1)
+```

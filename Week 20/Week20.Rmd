@@ -1,0 +1,94 @@
+---
+title: "3 million Russian troll tweets"
+output: html_notebook
+---
+
+## Loading Packages and Data...
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(lubridate)
+library(ggthemes)
+
+link <- ''
+files <- list.files(path = '.', pattern = '*.csv')
+t <- map(files, read_csv) %>% bind_rows()
+
+t$publish_date <- mdy_hm(t$publish_date)
+t$date <- as.POSIXct(format(t$publish_date, format = '%Y-%m-%d')) 
+
+```
+
+## Tweet by day
+```{r fig.height=7, fig.width=10}
+tw <- t %>% group_by(date) %>% summarise(count = n()) %>%
+            filter(date > '2014-12-31' & date <= '2018-01-01')
+
+p<-  ggplot(tw, aes(x= date, y=count)) +
+    scale_y_continuous(breaks = c(0, 5000, 10000,15000), labels = c('0', '5', '10', '15k'))+
+    scale_x_datetime(expand = expand_scale(add = 0.1))  + geom_area(fill= 'coral')+
+      labs(x = NULL, y = NULL,
+         title = 'Russian troll tweets by day',
+         subtitle = 'Nearly 3 million tweets sent by trolls associated with the Internet Research Agency',
+         caption = '\nSource: FiveThirtyEight, Darren Linvill and Patrick Warren \nPlot: Joe Salami') +
+         theme_fivethirtyeight() +
+  annotate(geom = 'text', 
+           x = as.POSIXct('2016-09-01'), 
+           y = 16500, 
+           label = 'OCT. 6, 2016\n Spike in troll activity\nright before WikiLeaks\nreleases Clinton\ncampaign emails',
+           fontface = 'bold', 
+           hjust = 1, 
+           vjust=1) +
+    annotate(geom = 'segment',
+             x=as.POSIXct('2016-09-06'), 
+             xend = as.POSIXct('2016-10-01') , 
+             y = 14500 , 
+             yend = 14500) +
+    annotate(geom = 'text', 
+             x = as.POSIXct('2017-09-21'), 
+             y = 16800, 
+             label = 'SUMMER 2017\n High season for\nRight Trolls',
+             fontface = 'bold', 
+             hjust = 1) +
+    annotate(geom = 'text',  
+             x = as.POSIXct('2017-02-08'), 
+             y = 10100, 
+             label = 'NOV.8, 2016 \nElection Day', 
+             fontface = 'bold')+
+    annotate(geom = 'segment',
+             x = as.POSIXct('2016-11-08'), 
+             xend= as.POSIXct('2017-01-01') , 
+             y = 7500 , 
+             yend = 9150, 
+             arrow = arrow(ends = 'first'))
+
+ggsave('Tweets_by_day.png',path = '~/GitHub/MyTidyTuesday/Week 20', width = 10, height = 10)
+p
+```
+
+## Tweets by category
+```{r fig.height=7, fig.width=10}
+  
+tw1 <- t %>% group_by(date, account_category) %>% summarise(count = n()) %>%
+             filter(date > '2014-12-31' & date <= '2018-01-01', account_category %in% c("RightTroll","LeftTroll" ,"HashtagGamer","NewsFeed"))
+
+anno_labs <-c('Hashtag Gamer\nParticipates in "hashtag\ngames"',
+       'Left Troll\nOften mimics Black\nLives Matter activists,\ntries to divide the Democractic party',
+       'News Feed\nAggregates local\nAmerican news',
+       'Right Troll\nMimics typical Trump\nsupporters, often virulently\nanti-immigrant')
+
+q<- ggplot(tw1, aes(x = date, y = count)) +
+      geom_area(stat = 'identity',show.legend = F, aes(fill = account_category)) +
+      theme_fivethirtyeight() + 
+      scale_y_continuous(breaks = c(0, 5000, 10000,15000), labels = c('0', '5', '10', '15k'))+
+      facet_wrap(~account_category, scales = 'fixed') +
+      labs(x = NULL, y = NULL,
+           title = 'Not all trolls are the same',
+           subtitle = 'Tweets sent by trolls associated with the Internet Research Agency, as classified by Clemson researchers',
+          caption = '\nSource: FiveThirtyEight, Darren Linvill and Patrick Warren \nPlot: Joe Salami') +
+      annotate(geom = 'text', label = anno_labs, x = as.POSIXct('2015-02-01'), y = 11000,ymax = 15000, fontface = 'bold', hjust = 0)
+
+ggsave('Tweets_by_category.png',path = '~/GitHub/MyTidyTuesday/Week 20', width = 10, height = 10)
+q
+```
+
