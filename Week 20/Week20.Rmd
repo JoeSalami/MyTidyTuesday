@@ -10,7 +10,8 @@ library(tidyverse)
 library(lubridate)
 library(ggthemes)
 
-link <- ''
+# link to data
+link <- 'https://github.com/fivethirtyeight/russian-troll-tweets'
 files <- list.files(path = '.', pattern = '*.csv')
 t <- map(files, read_csv) %>% bind_rows()
 
